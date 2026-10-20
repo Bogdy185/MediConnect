@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediConnect - Programări Medicale Online</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- NAVIGARE -->
+    <header>
+        <div class="logo">🏥 MediConnect AI</div>
+        <nav>
+            <button id="nav-home" class="btn-link" onclick="schimbaVizualizarea('home')">Acasă</button>
+            <div id="auth-nav-container">
+                <button class="btn-secondary" onclick="schimbaVizualizarea('login')">Autentificare</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- CONTINUT PRINCIPAL -->
+    <main>
+
+        <!-- 1. ECRANUL DE ACASĂ / CĂUTARE (Guest & Client) -->
+        <section id="view-home" class="view-section active">
+            <div class="hero">
+                <h1>Găsește medicul și clinica potrivită în orașul tău</h1>
+                <p>Programează-te rapid și simplu, fără timp pierdut la telefon.</p>
+                
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Caută specializare, medic sau clinică (ex: Cardiologie)...">
+                    <select id="citySelect">
+                        <option value="">Toate orașele</option>
+                        <option value="Bucuresti">București</option>
+                        <option value="Cluj">Cluj-Napoca</option>
+                        <option value="Baia Mare">Baia Mare</option>
+                    </select>
+                    <button class="btn-primary" onclick="cautaMedici()">Caută</button>
+                </div>
+            </div>
+
+            <div class="results-container">
+                <h2>Medici disponibili</h2>
+                <div id="doctorList" class="grid-cards">
+                    <!-- Generat din JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. ECRANUL DE AUTENTIFICARE -->
+        <section id="view-login" class="view-section">
+            <div class="login-card">
+                <h2>Autentificare în platformă</h2>
+                <p>Alege rolul cu care dorești să simulezi logarea:</p>
+                
+                <div class="login-options">
+                    <button class="btn-primary" onclick="simulareLogin('customer')">Intră ca Pacient</button>
+                    <button class="btn-accent" onclick="simulareLogin('doctor')">Intră ca Medic / Clinică</button>
+                </div>
+                <button class="btn-link" onclick="schimbaVizualizarea('home')">Înapoi la pagina principală</button>
+            </div>
+        </section>
+
+        <!-- 3. DASHBOARD PACIENT (CLIENT AUTENTIFICAT) -->
+        <section id="view-customer-dashboard" class="view-section">
+            <div class="dashboard-header">
+                <h2>Contul meu de pacient</h2>
+                <button class="btn-secondary" onclick="logout()">Deconectare</button>
+            </div>
+            <div class="dashboard-content">
+                <h3>Programările mele active</h3>
+                <div id="myAppointments" class="list-container">
+                    <!-- Aici vor apărea programările făcute -->
+                    <p>Nu ai nicio programare activă momentan.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. DASHBOARD MEDIC / CLINICĂ -->
+        <section id="view-doctor-dashboard" class="view-section">
+            <div class="dashboard-header">
+                <h2>Panou de Control Medic / Clinică</h2>
+                <button class="btn-secondary" onclick="logout()">Deconectare</button>
+            </div>
+            <div class="dashboard-content">
+                <h3>Programul tău de astăzi și rezervările primite</h3>
+                <div class="stats-box">
+                    <p>Total programări azi: <strong>3</strong></p>
+                </div>
+                <div class="list-container">
+                    <div class="appointment-item">
+                        <span>Ora 10:00 - Popescu Ion (Cardiologie)</span>
+                        <span class="badge-confirmed">Confirmat</span>
+                    </div>
+                    <div class="appointment-item">
+                        <span>Ora 11:30 - Ionescu Maria (Control periodic)</span>
+                        <span class="badge-confirmed">Confirmat</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SCRIPT -->
+    <script src="script.js"></script>
+</body>
+</html>
