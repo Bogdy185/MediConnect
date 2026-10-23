@@ -3,109 +3,557 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediConnect - Programări Medicale Online</title>
+    <title>MediConnect - Platformă Națională de Programări Medicale</title>
     <link rel="stylesheet" href="style.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- NAVIGARE -->
-    <header>
-        <div class="logo">🏥 MediConnect AI</div>
-        <nav>
-            <button id="nav-home" class="btn-link" onclick="schimbaVizualizarea('home')">Acasă</button>
-            <div id="auth-nav-container">
-                <button class="btn-secondary" onclick="schimbaVizualizarea('login')">Autentificare</button>
+    <!-- NOTIFICĂRI TOAST -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- BARA DE NAVIGARE (HEADER) -->
+    <header class="main-header">
+        <div class="header-inner">
+            <div class="brand" onclick="schimbaVizualizarea('home')" role="button" tabindex="0">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">MediConnect</span>
+                    <span class="logo-subtitle">Rețea Medicală Privată</span>
+                </div>
             </div>
-        </nav>
+
+            <nav class="main-nav">
+                <button id="nav-home" class="nav-link active" onclick="schimbaVizualizarea('home')">
+                    Explorare Medici
+                </button>
+                <button id="nav-triage" class="nav-link" onclick="mergiLaTriaj()">
+                    Ghid Simptome & Triaj
+                </button>
+                <button id="nav-clinics" class="nav-link" onclick="schimbaVizualizarea('clinics')">
+                    Clinici Partenere
+                </button>
+            </nav>
+
+            <div class="header-actions">
+                <!-- Comutator rapid de mod pentru demonstrație la prezentare -->
+                <div class="demo-role-switcher" title="Comutator rapid pentru prezentarea proiectului">
+                    <span class="demo-label">Mod Demo:</span>
+                    <button id="quick-guest" class="role-pill active" onclick="seteazaRolDemo('guest')">Vizitator</button>
+                    <button id="quick-customer" class="role-pill" onclick="seteazaRolDemo('customer')">Pacient</button>
+                    <button id="quick-doctor" class="role-pill" onclick="seteazaRolDemo('doctor')">Medic / B2B</button>
+                </div>
+
+                <div id="auth-nav-container">
+                    <button class="btn btn-primary btn-sm" onclick="schimbaVizualizarea('login')">
+                        Autentificare
+                    </button>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <!-- CONTINUT PRINCIPAL -->
-    <main>
+    <!-- CONȚINUT PRINCIPAL (SINGLE PAGE APPLICATION) -->
+    <main class="app-main">
 
-        <!-- 1. ECRANUL DE ACASĂ / CĂUTARE (Guest & Client) -->
+        <!-- =========================================================
+             1. ECRANUL PRINCIPAL: HERO, TRIAJ & LISTING MEDICI
+             ========================================================= -->
         <section id="view-home" class="view-section active">
-            <div class="hero">
-                <h1>Găsește medicul și clinica potrivită în orașul tău</h1>
-                <p>Programează-te rapid și simplu, fără timp pierdut la telefon.</p>
-                
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Caută specializare, medic sau clinică (ex: Cardiologie)...">
-                    <select id="citySelect">
-                        <option value="">Toate orașele</option>
-                        <option value="Bucuresti">București</option>
-                        <option value="Cluj">Cluj-Napoca</option>
-                        <option value="Baia Mare">Baia Mare</option>
-                    </select>
-                    <button class="btn-primary" onclick="cautaMedici()">Caută</button>
+            
+            <!-- ZONA HERO -->
+            <div class="hero-banner">
+                <div class="hero-badge">
+                    <span class="pulse-dot"></span> Peste 120+ medici specialiști cu disponibilitate în timp real
+                </div>
+                <h1>Sănătatea ta, la un click distanță.<br>Fără apeluri, fără așteptare.</h1>
+                <p class="hero-subtitle">
+                    Compară transparent prețurile consultațiilor, recenziile verificate și rezervă instantaneu un interval orar la clinicile private din orașul tău.
+                </p>
+
+                <!-- BARA DE CĂUTARE ÎN TIMP REAL -->
+                <div class="search-panel">
+                    <div class="search-input-group">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Caută medic, specializare sau clinică (ex: Cardiologie, Dr. Popescu, MedLife)..."
+                            oninput="filtreazaMediciInTimpReal()"
+                        >
+                        <button id="clearSearchBtn" class="clear-input-btn hidden" onclick="resetareCautareText()" title="Șterge textul">✕</button>
+                    </div>
+
+                    <div class="search-select-group">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <select id="citySelect" onchange="filtreazaMediciInTimpReal()">
+                            <option value="">Toate orașele</option>
+                            <option value="București">București</option>
+                            <option value="Cluj-Napoca">Cluj-Napoca</option>
+                            <option value="Baia Mare">Baia Mare</option>
+                            <option value="Timișoara">Timișoara</option>
+                            <option value="Iași">Iași</option>
+                        </select>
+                    </div>
+
+                    <div class="search-select-group">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="4" y1="21" x2="4" y2="14"></line>
+                            <line x1="4" y1="10" x2="4" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="3"></line>
+                            <line x1="20" y1="21" x2="20" y2="16"></line>
+                            <line x1="20" y1="12" x2="20" y2="3"></line>
+                        </svg>
+                        <select id="sortSelect" onchange="filtreazaMediciInTimpReal()">
+                            <option value="recomandat">Sortare: Recomandate</option>
+                            <option value="pret-asc">Preț: Crescător</option>
+                            <option value="pret-desc">Preț: Descrescător</option>
+                            <option value="rating-desc">Rating: Cel mai mare</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- FILTRE RAPIDE PE SPECIALIZĂRI -->
+                <div class="specialty-pills-wrapper">
+                    <div id="specialtyPills" class="specialty-pills">
+                        <!-- Generat dinamic din JS -->
+                    </div>
                 </div>
             </div>
 
-            <div class="results-container">
-                <h2>Medici disponibili</h2>
-                <div id="doctorList" class="grid-cards">
-                    <!-- Generat din JavaScript -->
+            <!-- MODULUL SMART TRIAGE (ANALIZĂ SIMPTOME & ÎNDRUMARE MEDICALĂ) -->
+            <div id="triage-section" class="triage-card">
+                <div class="triage-header">
+                    <div class="triage-title-group">
+                        <div class="triage-icon-badge">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
+                                <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"></path>
+                                <circle cx="19" cy="5" r="3"></circle>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Asistent Digital de Triaj Medical</h2>
+                            <p>Nu știi la ce specializare să mergi? Descrie simptomele tale în limbaj natural, iar sistemul îți recomandă ramura medicală potrivită și pregătește fișa pentru medic.</p>
+                        </div>
+                    </div>
+                    <span class="triage-tag">Triaj Inteligent</span>
                 </div>
+
+                <div class="triage-body">
+                    <div class="triage-input-row">
+                        <input 
+                            type="text" 
+                            id="symptomInput" 
+                            placeholder="Ex: Am palpitații, oboseală la efort și amețeli..."
+                            oninput="analizeazaSimptomeLive()"
+                            onkeydown="if(event.key === 'Enter') analizeazaSimptome(true)"
+                        >
+                        <button class="btn btn-accent" onclick="analizeazaSimptome(true)">
+                            Analizează Simptomele
+                        </button>
+                    </div>
+
+                    <!-- Exemple rapide clicabile pentru testare ușoară -->
+                    <div class="triage-examples">
+                        <span class="examples-label">Exemple rapide (click):</span>
+                        <button class="symptom-chip" onclick="completeazaSimptomExemplu('Am palpitații, înțepături în piept și oboseală la efort')">
+                            💓 Palpitații și oboseală la efort
+                        </button>
+                        <button class="symptom-chip" onclick="completeazaSimptomExemplu('Mă doare o măsea la rece și îmi sângerează gingia')">
+                            🦷 Durere de măsea la rece
+                        </button>
+                        <button class="symptom-chip" onclick="completeazaSimptomExemplu('Mi-a apărut o aluniță nouă și o iritație pe piele')">
+                            🔍 Aluniță sau iritație pe piele
+                        </button>
+                        <button class="symptom-chip" onclick="completeazaSimptomExemplu('Am dureri de cap frecvente, migrene și amețeală')">
+                            🧠 Migrene și amețeală
+                        </button>
+                        <button class="symptom-chip" onclick="completeazaSimptomExemplu('Vedere încețoșată la distanță și ochi uscați')">
+                            👁️ Vedere încețoșată
+                        </button>
+                        <button class="symptom-chip" onclick="completeazaSimptomExemplu('Durere de genunchi la mers și articulații umflate')">
+                            🦴 Durere de genunchi
+                        </button>
+                    </div>
+
+                    <!-- Rezultatul Triajului -->
+                    <div id="triageResult" class="triage-result hidden">
+                        <!-- Generat dinamic din JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- BARA DE STATUS REZULTATE & SELECTOR ZI -->
+            <div class="results-header-bar">
+                <div class="results-title-area">
+                    <h2>Medici și cabinete disponibile</h2>
+                    <span id="resultsCounter" class="results-badge">0 medici găsiți</span>
+                </div>
+
+                <div class="day-selector-group">
+                    <span class="day-label">Ziua programării:</span>
+                    <div class="day-tabs">
+                        <button class="day-tab active" data-day="Azi" onclick="schimbaZiuaSelectata('Azi', this)">Azi</button>
+                        <button class="day-tab" data-day="Mâine" onclick="schimbaZiuaSelectata('Mâine', this)">Mâine</button>
+                        <button class="day-tab" data-day="Poimâine" onclick="schimbaZiuaSelectata('Poimâine', this)">Poimâine</button>
+                    </div>
+                    <button id="resetFiltersBtn" class="btn btn-outline btn-sm hidden" onclick="reseteazaToateFiltrele()">
+                        Resetează filtrele
+                    </button>
+                </div>
+            </div>
+
+            <!-- GRILA DE CARDURI MEDICI -->
+            <div id="doctorList" class="grid-cards">
+                <!-- Generat dinamic din JavaScript -->
+            </div>
+
+        </section>
+
+        <!-- =========================================================
+             2. ECRANUL CLINICI PARTENERE (PREZENTARE B2B & ORAȘE)
+             ========================================================= -->
+        <section id="view-clinics" class="view-section">
+            <div class="section-page-header">
+                <div>
+                    <h2>Clinici și Cabinete Partenere</h2>
+                    <p>Rețeaua națională MediConnect conectează pacienții cu centre medicale de top din România.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="schimbaVizualizarea('home')">
+                    ← Înapoi la căutarea medicilor
+                </button>
+            </div>
+
+            <div id="clinicsList" class="clinics-grid">
+                <!-- Generat dinamic din JS -->
             </div>
         </section>
 
-        <!-- 2. ECRANUL DE AUTENTIFICARE -->
+        <!-- =========================================================
+             3. ECRANUL DE AUTENTIFICARE (PACIENT & MEDIC/CLINICĂ)
+             ========================================================= -->
         <section id="view-login" class="view-section">
-            <div class="login-card">
-                <h2>Autentificare în platformă</h2>
-                <p>Alege rolul cu care dorești să simulezi logarea:</p>
-                
-                <div class="login-options">
-                    <button class="btn-primary" onclick="simulareLogin('customer')">Intră ca Pacient</button>
-                    <button class="btn-accent" onclick="simulareLogin('doctor')">Intră ca Medic / Clinică</button>
+            <div class="auth-wrapper">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2>Autentificare în platformă</h2>
+                        <p>Selectează tipul de cont pentru a accesa funcționalitățile dedicate</p>
+                    </div>
+
+                    <div class="auth-role-cards">
+                        <!-- Card Pacient (B2C) -->
+                        <div class="role-card" onclick="simulareLogin('customer')">
+                            <div class="role-card-icon customer-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <h3>Cont Pacient (B2C)</h3>
+                            <p>Programează-te rapid, vezi istoricul consultațiilor, sintezele medicale și gestionează rezervările active.</p>
+                            <ul class="role-features">
+                                <li>✓ Rezervare instantanee pe sloturi orare</li>
+                                <li>✓ Istoric și anulare gratuită cu un click</li>
+                                <li>✓ Fișă de pre-consultație generată automat</li>
+                            </ul>
+                            <button class="btn btn-primary btn-block">Intră ca Pacient (Alexandru Marin)</button>
+                        </div>
+
+                        <!-- Card Medic / Clinică (B2B) -->
+                        <div class="role-card" onclick="simulareLogin('doctor')">
+                            <div class="role-card-icon doctor-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                            </div>
+                            <h3>Cont Medic / Clinică (B2B)</h3>
+                            <p>Panou de control digital pentru gestionarea agendei zilnice, a pacienților programați și a intervalelor disponibile.</p>
+                            <ul class="role-features">
+                                <li>✓ Agendă sincronizată în timp real</li>
+                                <li>✓ Vizualizare fișă scurtă de triaj per pacient</li>
+                                <li>✓ Blocare / deblocare manuală a sloturilor</li>
+                            </ul>
+                            <button class="btn btn-accent btn-block">Intră ca Medic / Administrator Clinică</button>
+                        </div>
+                    </div>
+
+                    <div class="auth-footer">
+                        <button class="btn-link" onclick="schimbaVizualizarea('home')">← Înapoi la pagina principală</button>
+                    </div>
                 </div>
-                <button class="btn-link" onclick="schimbaVizualizarea('home')">Înapoi la pagina principală</button>
             </div>
         </section>
 
-        <!-- 3. DASHBOARD PACIENT (CLIENT AUTENTIFICAT) -->
+        <!-- =========================================================
+             4. DASHBOARD PACIENT (CONTUL MEU B2C)
+             ========================================================= -->
         <section id="view-customer-dashboard" class="view-section">
             <div class="dashboard-header">
-                <h2>Contul meu de pacient</h2>
-                <button class="btn-secondary" onclick="logout()">Deconectare</button>
+                <div class="user-welcome">
+                    <div class="avatar-circle customer-avatar">AM</div>
+                    <div>
+                        <span class="role-badge-header">Cont Pacient Verificat</span>
+                        <h2 id="customerNameDisplay">Alexandru Marin</h2>
+                        <p class="text-muted">București • Telefon: 0742 819 304 • Asigurat & Privat</p>
+                    </div>
+                </div>
+                <div class="dashboard-actions">
+                    <button class="btn btn-primary" onclick="schimbaVizualizarea('home')">
+                        + Programare Nouă
+                    </button>
+                    <button class="btn btn-secondary" onclick="logout()">
+                        Deconectare
+                    </button>
+                </div>
             </div>
-            <div class="dashboard-content">
-                <h3>Programările mele active</h3>
-                <div id="myAppointments" class="list-container">
-                    <!-- Aici vor apărea programările făcute -->
-                    <p>Nu ai nicio programare activă momentan.</p>
+
+            <!-- Statistici Pacient -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <span class="kpi-label">Programări Active</span>
+                    <strong id="custStatActive" class="kpi-value primary-text">0</strong>
+                    <span class="kpi-sub">Confirmate în calendar</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-label">Ultima Triere Simptome</span>
+                    <strong id="custStatTriage" class="kpi-value accent-text">General</strong>
+                    <span class="kpi-sub">Recomandare inteligentă</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-label">Cost Total Estimat</span>
+                    <strong id="custStatCost" class="kpi-value">0 RON</strong>
+                    <span class="kpi-sub">Plata la recepția clinicii</span>
+                </div>
+            </div>
+
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h3>Programările mele viitoare și istoricul rezervărilor</h3>
+                    <span class="panel-subtitle">Anularea unei programări eliberează instantaneu locul în agenda medicului</span>
+                </div>
+                <div id="myAppointments" class="appointments-list">
+                    <!-- Generat dinamic din JS -->
                 </div>
             </div>
         </section>
 
-        <!-- 4. DASHBOARD MEDIC / CLINICĂ -->
+        <!-- =========================================================
+             5. DASHBOARD MEDIC / CLINICĂ (PANOU DE CONTROL B2B)
+             ========================================================= -->
         <section id="view-doctor-dashboard" class="view-section">
             <div class="dashboard-header">
-                <h2>Panou de Control Medic / Clinică</h2>
-                <button class="btn-secondary" onclick="logout()">Deconectare</button>
+                <div class="user-welcome">
+                    <div id="docDashboardAvatar" class="avatar-circle doctor-avatar">EP</div>
+                    <div>
+                        <span class="role-badge-header b2b-badge">Panou Administrare B2B • Medic & Recepcie</span>
+                        <h2 id="docDashboardName">Dr. Elena Popescu</h2>
+                        <p id="docDashboardMeta" class="text-muted">Cardiologie • MedLife Titan (București)</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-actions">
+                    <div class="doctor-selector-box">
+                        <label for="activeDoctorSelect">Selectează medicul gestionat:</label>
+                        <select id="activeDoctorSelect" onchange="schimbaMediculActivDashboard(this.value)">
+                            <!-- Populat din JS cu toți medicii -->
+                        </select>
+                    </div>
+                    <button class="btn btn-secondary" onclick="logout()">Deconectare</button>
+                </div>
             </div>
-            <div class="dashboard-content">
-                <h3>Programul tău de astăzi și rezervările primite</h3>
-                <div class="stats-box">
-                    <p>Total programări azi: <strong>3</strong></p>
+
+            <!-- Statistici B2B Medic -->
+            <div class="kpi-grid kpi-grid-4">
+                <div class="kpi-card">
+                    <span class="kpi-label">Pacienți Programați Azi</span>
+                    <strong id="docStatBooked" class="kpi-value primary-text">0</strong>
+                    <span class="kpi-sub">Rezervări confirmate</span>
                 </div>
-                <div class="list-container">
-                    <div class="appointment-item">
-                        <span>Ora 10:00 - Popescu Ion (Cardiologie)</span>
-                        <span class="badge-confirmed">Confirmat</span>
+                <div class="kpi-card">
+                    <span class="kpi-label">Sloturi Libere Rămase</span>
+                    <strong id="docStatAvailable" class="kpi-value accent-text">0</strong>
+                    <span class="kpi-sub">Disponibile pentru pacienți</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-label">Sloturi Blocate Manual</span>
+                    <strong id="docStatBlocked" class="kpi-value warning-text">0</strong>
+                    <span class="kpi-sub">Pauză / Indisponibil</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-label">Venit Estimat Azi</span>
+                    <strong id="docStatRevenue" class="kpi-value">0 RON</strong>
+                    <span class="kpi-sub">Din consultațiile programate</span>
+                </div>
+            </div>
+
+            <!-- Conținut în 2 coloane pentru Medic: 1. Agendă & Sloturi | 2. Rezervări și Fișe Pacienți -->
+            <div class="doctor-dashboard-grid">
+                
+                <!-- COLOANA 1: GESTIONARE SLOTURI ORARE -->
+                <div class="dashboard-panel">
+                    <div class="panel-header">
+                        <h3>Control Sloturi Orare (Azi)</h3>
+                        <p class="panel-subtitle">Click pe un slot liber pentru a-l bloca/debloca în timp real pe site</p>
                     </div>
-                    <div class="appointment-item">
-                        <span>Ora 11:30 - Ionescu Maria (Control periodic)</span>
-                        <span class="badge-confirmed">Confirmat</span>
+
+                    <div id="doctorSlotManager" class="slot-manager-list">
+                        <!-- Generat dinamic din JS -->
+                    </div>
+
+                    <div class="add-slot-box">
+                        <h4>Adaugă un interval orar suplimentar</h4>
+                        <div class="add-slot-row">
+                            <input type="time" id="newSlotTimeInput" value="17:30">
+                            <button class="btn btn-primary btn-sm" onclick="adaugaSlotNouMedic()">
+                                + Adaugă Ora
+                            </button>
+                        </div>
                     </div>
                 </div>
+
+                <!-- COLOANA 2: LISTA CRONOLOGICĂ PACIENȚI & FIȘE DE SINTEZĂ -->
+                <div class="dashboard-panel">
+                    <div class="panel-header">
+                        <h3>Agenda Pacienților & Fișe Pre-Consultație</h3>
+                        <p class="panel-subtitle">Include sumarul clinic generat automat la rezervare</p>
+                    </div>
+
+                    <div id="doctorAppointmentsList" class="doctor-appointments-container">
+                        <!-- Generat dinamic din JS -->
+                    </div>
+                </div>
+
             </div>
         </section>
 
     </main>
 
-    <!-- SCRIPT -->
+    <!-- =========================================================
+         MODAL CONFIRMARE REZERVARE + SINTEZĂ FIȘĂ PENTRU MEDIC
+         ========================================================= -->
+    <div id="bookingModal" class="modal-overlay hidden" onclick="inchideModalLaClickExterior(event, 'bookingModal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <span class="modal-Tag">Rezervare Instantanee</span>
+                    <h3>Confirmare Programare Medicală</h3>
+                </div>
+                <button class="modal-close-btn" onclick="inchideModalRezervare()">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Sumar Medic și Cost -->
+                <div id="modalDoctorSummary" class="booking-summary-box">
+                    <!-- Populat din JS -->
+                </div>
+
+                <!-- Selector Oră în Modal -->
+                <div class="form-group">
+                    <label>Intervalul orar ales (<span id="modalSelectedDayLabel">Azi</span>):</label>
+                    <div id="modalSlotsContainer" class="modal-slots-pills">
+                        <!-- Populat din JS -->
+                    </div>
+                </div>
+
+                <!-- Datele Pacientului -->
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="patientNameInput">Nume și prenume pacient *</label>
+                        <input type="text" id="patientNameInput" placeholder="Ex: Alexandru Marin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="patientPhoneInput">Număr de telefon *</label>
+                        <input type="tel" id="patientPhoneInput" placeholder="Ex: 0742 819 304" required>
+                    </div>
+                </div>
+
+                <!-- Descriere Simptome / Motivul Prezentării -->
+                <div class="form-group">
+                    <label for="patientSymptomsInput">
+                        Motivul prezentării / Simptome acuzate (pentru generarea fișei medicului)
+                    </label>
+                    <textarea 
+                        id="patientSymptomsInput" 
+                        rows="2" 
+                        placeholder="Ex: Palpitații și stări de amețeală la efort în ultimele 2 săptămâni..."
+                        oninput="actualizeazaFisaSinteticaLive()"
+                    ></textarea>
+                </div>
+
+                <!-- Previzualizare Fișă Scurtă Generată Automat pentru Medic -->
+                <div class="synthetic-note-preview">
+                    <div class="synthetic-note-header">
+                        <span class="synthetic-badge">✨ Sinteză Automată pentru Medic</span>
+                        <span class="synthetic-sub">Se atașează automat în agenda doctorului</span>
+                    </div>
+                    <p id="syntheticNoteText" class="synthetic-note-content">
+                        <!-- Generat în timp real din JS -->
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="inchideModalRezervare()">Anulează</button>
+                <button id="confirmBookingBtn" class="btn btn-accent" onclick="finalizeazaRezervarea()">
+                    Confirmă Programarea
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL DETALII PROFIL MEDIC & RECENZII PACIENȚI
+         ========================================================= -->
+    <div id="profileModal" class="modal-overlay hidden" onclick="inchideModalLaClickExterior(event, 'profileModal')">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <div>
+                    <span class="modal-Tag">Profil Verificat</span>
+                    <h3 id="profileModalTitle">Detalii Medic Specialist</h3>
+                </div>
+                <button class="modal-close-btn" onclick="inchideModalProfil()">✕</button>
+            </div>
+            <div id="profileModalBody" class="modal-body">
+                <!-- Populat din JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="inchideModalProfil()">Închide</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUBSOL (FOOTER) -->
+    <footer class="main-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <strong>MediConnect</strong> — Agregator și Marketplace Medical (SPA Prototip)
+                <p>Conectăm pacienții cu clinicile private din București, Cluj-Napoca, Baia Mare, Timișoara și Iași.</p>
+            </div>
+            <div class="footer-actions">
+                <button class="btn btn-outline btn-sm" onclick="reseteazaDateleDemo()">
+                    ↻ Resetează Datele Demo la Starea Inițială
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPT PRINCIPAL -->
     <script src="script.js"></script>
 </body>
 </html>
